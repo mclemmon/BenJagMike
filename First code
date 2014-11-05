@@ -1,0 +1,166 @@
+// Serial Temperature Sensor and visual output through LEDs
+
+
+float temperature = 0; // store data in a variable with coma, temperature, whoe value is initially “null”
+
+//—————————————————————————-
+
+int analogPin = 0; // // initialize as input ANALOG read (the SENSOR’s pin)
+
+const int ledCount = 10; // the number of LEDs in the bar graph
+
+int ledPins[] = { 2, 3, 4, 5, 6, 7,8,9,10,11 }; // an array of pin numbers to which LEDs are attached
+
+//—————————————————————————————————————
+
+//setup
+
+void setup()
+
+{
+
+Serial.begin(9600); //open communication with the serial port
+
+Serial.println(“LM35 Thermometer “); //print a starting message
+
+analogReference(INTERNAL); // THIS FUNCTION IS REALLY IMPORTANT WHEN USING
+
+// analogRead() INPUPTS. USING THE ANALOG INPUT, THE
+
+// FUNCTION WILL RETURN VALUES FROM 0 TO 1023.
+
+// The options for this function are:
+
+//DEFAULT: the default analog reference of 5 volts
+
+//INTERNAL: an in-built reference, equal to 1.1 volts
+
+//EXTERNAL: the voltage applied to the AREF pin is
+
+//used as a reference
+
+//SINCE THE MAXIMUM VALUE THE SENSOR
+
+//CAN HANDLE IS 1VOLT, WE HAVE TO USE “INTERNAL”
+
+//INTERNAL … means voltages of 1.1v or higher from the
+
+//temperature sensor will give an analog reading of
+
+//1023. Anything lower will give a lower value, e.g. 0.55
+
+//volts will give 512. The sensor range is from 0C to 100C
+
+//therefore 0C will be calculated when the sensor records 0volts
+
+}
+
+//function
+
+void printTenths(int value) {
+
+//printTenths function is used to show the fraction of the temperature reading 18,2C
+
+Serial.print(value / 10); // prints a value of 123 as 12.3
+
+Serial.print(“.”);
+
+Serial.println(value % 100); //print the value after the decimal point “write 100 for a 2nd digit precision 0,00″
+
+//—————————————————————————-
+
+// loop over the pin array and set them all to output:
+
+for (int thisLed = 0; thisLed < ledCount; thisLed++) {
+
+pinMode(ledPins[thisLed], OUTPUT);
+
+//—————————————————————————————————————
+
+}
+
+}
+
+void loop() { //this loop allows to reduce the error reading from analogig sensors (like the LM35) introducing an
+
+//averaged value of the temperature, using the variable SPAN value 20. It means that 20 readings of
+
+//the temperature are taken and than the output is divided by 20
+
+int span = 20; //set up the number of readings
+
+int aRead = 0; //store an initial value of 0 for the anaologic read
+
+for (int i = 0; i < span; i++) { //for 20 times do the following process
+
+aRead = aRead+analogRead(analogPin); //read the analog from pin0 and sum it to 0(aRead)
+
+}
+
+aRead = aRead / 20; //average final value
+
+//according to a simple mathematic proportion aRead : Temperature = 1023 : 100
+
+//infact 1023 is the maximum analog value as well as 100 is the maximum analogic temperature
+
+//The sensor is reading temperature according to Voltage variations (0 to 1Volts)
+
+//therefore 0to1Volts corresponds to 0to1023 analogic values. But because we set up a function option
+
+//calle “INTERNAL” (that assigs 1.1Volts to the maximum snalogic range 1024) it is required to
+
+//write the following equation:
+
+temperature = ((aRead*100*1.1)/1023)*10; // convert analog signal into temperature
+
+//than we can print the temperature on the monitor together with the analogic value detected by the LM35
+
+Serial.print(“Analog in reading: “);
+
+Serial.print(long(aRead));
+
+// print temperature value on serial monitor
+
+Serial.print(” – Calculated Temp: “);
+
+printTenths(long(temperature));
+
+delay(1000); //time lag before next printed temperature
+
+//—————————————————————————-
+
+// read the SENSOR:
+
+int sensorReading = long(aRead);
+
+// map the result to a range from 0 to the number of LEDs:
+
+int ledLevel = map(sensorReading, 170, 270, 0, ledCount);
+
+// loop over the LED array:
+
+for (int thisLed = 0; thisLed < ledCount; thisLed++) {
+
+// if the array element’s index is less than ledLevel,
+
+// turn the pin for this element on:
+
+if (thisLed < ledLevel) {
+
+digitalWrite(ledPins[thisLed], HIGH);
+
+}
+
+// turn off all pins higher than the ledLevel:
+
+else {
+
+digitalWrite(ledPins[thisLed], LOW);
+
+}
+
+//—————————————————————————————————————
+
+}
+
+}
